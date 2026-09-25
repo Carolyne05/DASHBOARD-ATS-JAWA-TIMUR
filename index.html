@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Data Anak Tidak Sekolah 2026 · BBPMP Jawa Timur</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+    body { display: flex; flex-direction: column; height: 100vh; background: #f1f5f9; overflow: hidden; }
+    header { position: relative; z-index: 1000; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: linear-gradient(135deg, #075985, #0284c7); color: white; padding: 14px 24px; box-shadow: 0 3px 14px #0f172a33; }
+    .header-title { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
+    .header-subtitle { font-size: 11px; font-weight: 400; opacity: .8; margin-top: 3px; }
+    .header-badge { padding: 7px 12px; border: 1px solid #ffffff55; border-radius: 999px; font-size: 11px; white-space: nowrap; background: #ffffff18; }
+    #map { flex: 1; width: 100%; height: 100%; background: #dbeafe; }
+    .map-year-badge { position: absolute; z-index: 500; top: 12px; right: 12px; padding: 8px 12px; border: 1px solid #ffffffaa; border-radius: 999px; background: linear-gradient(135deg, #075985ee, #0284c7ee); color: white; box-shadow: 0 3px 10px #0f172a44; font-size: 11px; font-weight: 700; letter-spacing: .2px; backdrop-filter: blur(4px); }
+    .map-panel { position: absolute; z-index: 500; left: 10px; bottom: 10px; width: 180px; padding: 9px 10px; border: 1px solid #ffffff; border-radius: 10px; background: linear-gradient(145deg, #fffffffa, #f8fafcf5); box-shadow: 0 5px 14px #0f172a2b; backdrop-filter: blur(8px); }
+    .map-panel h2 { display: flex; align-items: center; gap: 5px; color: #0f172a; font-size: 10px; line-height: 1.25; margin-bottom: 5px; }
+    .map-panel h2::before { content: '📍'; font-size: 11px; }
+    .map-panel p { color: #64748b; font-size: 9px; line-height: 1.35; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; }
+    .legend { display: grid; gap: 5px; color: #334155; font-size: 9px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .legend-dot { flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 0 1.5px #e0f2fe; }
+    .leaflet-control-zoom { border: 1px solid #cbd5e1 !important; box-shadow: 0 2px 8px #0f172a22 !important; }
+    .leaflet-control-zoom a { color: #0369a1 !important; border-bottom: 1px solid #e2e8f0 !important; }
+    .ats-card { min-width: 300px; text-align: center; }
+    .ats-card h3 { font-size: 15px; color: #0369a1; margin-bottom: 4px; border-bottom: 2px dashed #bae6fd; padding-bottom: 4px; font-weight: bold; }
+    .ats-total { font-size: 12px; color: #475569; margin-bottom: 8px; }
+    .ats-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 8px; }
+    .ats-column { border: 0; border-radius: 7px; padding: 7px 4px; font-size: 10px; line-height: 1.35; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+    .ats-column:hover, .ats-column:focus { transform: translateY(-2px); box-shadow: 0 2px 7px #64748b88; outline: 2px solid #0284c7; }
+    .ats-column strong { display: block; font-size: 11px; margin-bottom: 3px; }
+    .ats-column span, .ats-column em { display: none; }
+    .ats-column.active span, .ats-column.active em { display: block; }
+    .ats-column em { font-style: normal; }
+    .ats-detail { min-height: 30px; margin-top: 8px; padding-top: 6px; border-top: 1px solid #cbd5e1; font-size: 11px; color: #334155; }
+    .column-bpb { background: #dcfce7; color: #166534; }
+    .column-do { background: #fee2e2; color: #991b1b; }
+    .column-ltm { background: #fef3c7; color: #92400e; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="header-title">🗺️ Dashboard Data Anak Tidak Sekolah 2026</div>
+      <div class="header-subtitle">BBPMP Jawa Timur</div>
+    </div>
+    <div class="header-badge">38 Kabupaten/Kota · 2026</div>
+  </header>
+  <div id="map">
+    <div class="map-year-badge">DATA ATS · 2026</div>
+    <aside class="map-panel">
+      <h2>Persebaran ATS Jawa Timur</h2>
+      <p>Pilih titik wilayah untuk melihat rincian kategori ATS.</p>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#0284c7"></span> Lokasi kabupaten/kota</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Belum Pernah Sekolah</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Putus Sekolah</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#d97706"></span> Lulus Tidak Melanjutkan</div>
+      </div>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const atsData = [
+      { name: "Kab. Sumenep", lat: -7.016, lng: 113.866, total: 12549, bpb: 6170, bpbPct: "49.17%", doV: 2893, doPct: "23.05%", ltm: 3486, ltmPct: "27.78%" },
+      { name: "Kab. Pamekasan", lat: -7.160, lng: 113.482, total: 7033, bpb: 3586, bpbPct: "50.99%", doV: 1699, doPct: "24.16%", ltm: 1748, ltmPct: "24.85%" },
+      { name: "Kab. Sampang", lat: -7.050, lng: 113.250, total: 25610, bpb: 13509, bpbPct: "52.75%", doV: 4950, doPct: "19.33%", ltm: 7151, ltmPct: "27.93%" },
+      { name: "Kab. Bangkalan", lat: -7.045, lng: 112.742, total: 27907, bpb: 12399, bpbPct: "44.43%", doV: 5135, doPct: "18.40%", ltm: 10373, ltmPct: "37.17%" },
+      { name: "Kota Surabaya", lat: -7.257, lng: 112.752, total: 21154, bpb: 7954, bpbPct: "37.60%", doV: 7414, doPct: "35.05%", ltm: 5786, ltmPct: "27.35%" },
+      { name: "Kab. Sidoarjo", lat: -7.447, lng: 112.718, total: 9390, bpb: 4005, bpbPct: "42.65%", doV: 3032, doPct: "32.29%", ltm: 2353, ltmPct: "25.06%" },
+      { name: "Kab. Gresik", lat: -7.156, lng: 112.655, total: 4994, bpb: 1808, bpbPct: "36.20%", doV: 1780, doPct: "35.64%", ltm: 1406, ltmPct: "28.15%" },
+      { name: "Kab. Mojokerto", lat: -7.550, lng: 112.450, total: 3877, bpb: 1278, bpbPct: "32.96%", doV: 1536, doPct: "39.62%", ltm: 1063, ltmPct: "27.42%" },
+      { name: "Kota Mojokerto", lat: -7.472, lng: 112.438, total: 420, bpb: 129, bpbPct: "30.71%", doV: 192, doPct: "45.71%", ltm: 99, ltmPct: "23.57%" },
+      { name: "Kab. Jombang", lat: -7.546, lng: 112.233, total: 6791, bpb: 2032, bpbPct: "29.92%", doV: 2848, doPct: "41.94%", ltm: 1911, ltmPct: "28.14%" },
+      { name: "Kab. Bojonegoro", lat: -7.150, lng: 111.881, total: 4131, bpb: 1278, bpbPct: "30.94%", doV: 1377, doPct: "33.33%", ltm: 1476, ltmPct: "35.73%" },
+      { name: "Kab. Tuban", lat: -6.897, lng: 112.064, total: 6904, bpb: 2188, bpbPct: "31.69%", doV: 2042, doPct: "29.58%", ltm: 2674, ltmPct: "38.73%" },
+      { name: "Kab. Lamongan", lat: -7.119, lng: 112.413, total: 5307, bpb: 2580, bpbPct: "48.62%", doV: 1510, doPct: "28.45%", ltm: 1217, ltmPct: "22.93%" },
+      { name: "Kab. Madiun", lat: -7.616, lng: 111.650, total: 2994, bpb: 1496, bpbPct: "49.97%", doV: 794, doPct: "26.52%", ltm: 704, ltmPct: "23.51%" },
+      { name: "Kota Madiun", lat: -7.629, lng: 111.523, total: 692, bpb: 379, bpbPct: "54.77%", doV: 223, doPct: "32.23%", ltm: 90, ltmPct: "13.01%" },
+      { name: "Kab. Ngawi", lat: -7.403, lng: 111.445, total: 4781, bpb: 1720, bpbPct: "35.98%", doV: 1576, doPct: "32.96%", ltm: 1485, ltmPct: "31.06%" },
+      { name: "Kab. Magetan", lat: -7.653, lng: 111.328, total: 2575, bpb: 939, bpbPct: "36.47%", doV: 841, doPct: "32.66%", ltm: 795, ltmPct: "30.87%" },
+      { name: "Kab. Ponorogo", lat: -7.868, lng: 111.462, total: 4718, bpb: 1292, bpbPct: "27.38%", doV: 1519, doPct: "32.20%", ltm: 1907, ltmPct: "40.42%" },
+      { name: "Kab. Pacitan", lat: -8.132, lng: 111.162, total: 4539, bpb: 1448, bpbPct: "31.90%", doV: 1105, doPct: "24.34%", ltm: 1986, ltmPct: "43.75%" },
+      { name: "Kab. Kediri", lat: -7.848, lng: 112.017, total: 11231, bpb: 3317, bpbPct: "29.53%", doV: 3522, doPct: "31.36%", ltm: 4392, ltmPct: "39.11%" },
+      { name: "Kota Kediri", lat: -7.822, lng: 112.011, total: 2188, bpb: 365, bpbPct: "16.68%", doV: 921, doPct: "42.09%", ltm: 902, ltmPct: "41.22%" },
+      { name: "Kab. Nganjuk", lat: -7.604, lng: 111.904, total: 7360, bpb: 2650, bpbPct: "36.01%", doV: 2212, doPct: "30.05%", ltm: 2498, ltmPct: "33.94%" },
+      { name: "Kab. Blitar", lat: -8.133, lng: 112.166, total: 11579, bpb: 2214, bpbPct: "19.12%", doV: 3710, doPct: "32.04%", ltm: 5655, ltmPct: "48.84%" },
+      { name: "Kota Blitar", lat: -8.098, lng: 112.168, total: 851, bpb: 239, bpbPct: "28.08%", doV: 403, doPct: "47.36%", ltm: 209, ltmPct: "24.56%" },
+      { name: "Kab. Tulungagung", lat: -8.066, lng: 111.900, total: 6999, bpb: 1555, bpbPct: "22.22%", doV: 2479, doPct: "35.42%", ltm: 2965, ltmPct: "42.36%" },
+      { name: "Kab. Trenggalek", lat: -8.050, lng: 111.716, total: 4505, bpb: 665, bpbPct: "14.76%", doV: 1286, doPct: "28.55%", ltm: 2554, ltmPct: "56.69%" },
+      { name: "Kab. Malang", lat: -8.166, lng: 112.666, total: 26949, bpb: 6204, bpbPct: "23.02%", doV: 9761, doPct: "36.22%", ltm: 10984, ltmPct: "40.75%" },
+      { name: "Kota Malang", lat: -7.983, lng: 112.621, total: 4206, bpb: 1787, bpbPct: "42.49%", doV: 1675, doPct: "39.82%", ltm: 744, ltmPct: "17.69%" },
+      { name: "Kota Batu", lat: -7.871, lng: 112.527, total: 1324, bpb: 387, bpbPct: "29.23%", doV: 563, doPct: "42.52%", ltm: 374, ltmPct: "28.25%" },
+      { name: "Kab. Pasuruan", lat: -7.733, lng: 112.833, total: 18417, bpb: 5676, bpbPct: "30.82%", doV: 5893, doPct: "32.00%", ltm: 6848, ltmPct: "37.18%" },
+      { name: "Kota Pasuruan", lat: -7.645, lng: 112.907, total: 1907, bpb: 596, bpbPct: "31.25%", doV: 656, doPct: "34.40%", ltm: 655, ltmPct: "34.35%" },
+      { name: "Kab. Probolinggo", lat: -7.816, lng: 113.216, total: 12131, bpb: 4143, bpbPct: "34.15%", doV: 4353, doPct: "35.88%", ltm: 3635, ltmPct: "29.96%" },
+      { name: "Kota Probolinggo", lat: -7.754, lng: 113.215, total: 1685, bpb: 645, bpbPct: "38.28%", doV: 594, doPct: "35.25%", ltm: 446, ltmPct: "26.47%" },
+      { name: "Kab. Lumajang", lat: -8.133, lng: 113.225, total: 13054, bpb: 4040, bpbPct: "30.95%", doV: 3559, doPct: "27.26%", ltm: 5455, ltmPct: "41.80%" },
+      { name: "Kab. Bondowoso", lat: -7.913, lng: 113.821, total: 7426, bpb: 3425, bpbPct: "46.12%", doV: 2437, doPct: "32.82%", ltm: 1564, ltmPct: "21.06%" },
+      { name: "Kab. Situbondo", lat: -7.706, lng: 114.004, total: 5269, bpb: 1831, bpbPct: "34.75%", doV: 1969, doPct: "37.37%", ltm: 1469, ltmPct: "27.88%" },
+      { name: "Kab. Jember", lat: -8.172, lng: 113.700, total: 35582, bpb: 15788, bpbPct: "44.37%", doV: 8735, doPct: "24.55%", ltm: 11059, ltmPct: "31.08%" },
+      { name: "Kab. Banyuwangi", lat: -8.219, lng: 114.369, total: 8324, bpb: 3042, bpbPct: "36.54%", doV: 3062, doPct: "36.79%", ltm: 2220, ltmPct: "26.67%" }
+    ];
+
+    const map = L.map('map').setView([-7.7, 112.8], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+
+    function createPopup(d) {
+      const div = document.createElement('div');
+      div.className = 'ats-card';
+      div.innerHTML = `
+        <h3>${d.name}</h3>
+        <div class="ats-total">Total ATS: <b>${d.total.toLocaleString('id-ID')} anak</b></div>
+        <div class="ats-columns">
+          <button type="button" class="ats-column column-bpb" data-type="bpb">
+            <strong>🟢 BPB</strong>
+            <span>${d.bpb.toLocaleString('id-ID')}</span>
+            <em>${d.bpbPct}</em>
+          </button>
+          <button type="button" class="ats-column column-do" data-type="do">
+            <strong>🔴 DO</strong>
+            <span>${d.doV.toLocaleString('id-ID')}</span>
+            <em>${d.doPct}</em>
+          </button>
+          <button type="button" class="ats-column column-ltm" data-type="ltm">
+            <strong>🟡 LTM</strong>
+            <span>${d.ltm.toLocaleString('id-ID')}</span>
+            <em>${d.ltmPct}</em>
+          </button>
+        </div>
+        <div class="ats-detail" aria-live="polite">Klik salah satu kolom untuk melihat detail.</div>
+      `;
+
+      const detail = div.querySelector('.ats-detail');
+      div.querySelectorAll('.ats-column').forEach(button => {
+        button.addEventListener('click', () => {
+          div.querySelectorAll('.ats-column').forEach(item => item.classList.remove('active'));
+          button.classList.add('active');
+          const type = button.dataset.type;
+          const labels = {
+            bpb: ['🟢 Belum Pernah Sekolah (BPB)', d.bpb, d.bpbPct, '#16a34a'],
+            do: ['🔴 Putus Sekolah (DO)', d.doV, d.doPct, '#dc2626'],
+            ltm: ['🟡 Lulus Tidak Melanjutkan (LTM)', d.ltm, d.ltmPct, '#a16207']
+          };
+          const [label, value, percentage, color] = labels[type];
+          detail.innerHTML = `<b style="color:${color}">${label}:</b> ${value.toLocaleString('id-ID')} anak (${percentage})`;
+        });
+      });
+
+      return div;
+    }
+
+    window.show = function(name, type) {
+      const d = atsData.find(x => x.name === name);
+      const box = document.getElementById('box-' + name.replace(/[^a-zA-Z]/g, ''));
+      if (!d || !box) return;
+      box.classList.add('active');
+
+      if (type === 'bpb') {
+        box.innerHTML = `<b style="color:#16a34a">🟢 Belum Pernah Sekolah (BPB):</b><br><span style="font-size:15px; font-weight:bold;">${d.bpb.toLocaleString('id-ID')} anak</span> (${d.bpbPct})`;
+      } else if (type === 'do') {
+        box.innerHTML = `<b style="color:#dc2626">🔴 Putus Sekolah (DO):</b><br><span style="font-size:15px; font-weight:bold;">${d.doV.toLocaleString('id-ID')} anak</span> (${d.doPct})`;
+      } else if (type === 'ltm') {
+        box.innerHTML = `<b style="color:#a16207">🟡 Lulus Tidak Melanjutkan (LTM):</b><br><span style="font-size:15px; font-weight:bold;">${d.ltm.toLocaleString('id-ID')} anak</span> (${d.ltmPct})`;
+      }
+    };
+
+    atsData.forEach(d => {
+      const marker = L.circleMarker([d.lat, d.lng], { radius: 8, fillColor: '#0284c7', color: '#fff', weight: 2, fillOpacity: 0.9 }).addTo(map);
+      marker.bindPopup(createPopup(d), { maxWidth: 280 });
+    });
+  </script>
+</body>
+</html>
