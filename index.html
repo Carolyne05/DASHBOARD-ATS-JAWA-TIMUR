@@ -2,60 +2,105 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Data Anak Tidak Sekolah 2026 · BBPMP Jawa Timur</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Anak Tidak Sekolah (ATS) — BBPMP Jawa Timur</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    body { display: flex; flex-direction: column; height: 100vh; background: #f1f5f9; overflow: hidden; }
-    header { position: relative; z-index: 1000; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: linear-gradient(135deg, #075985, #0284c7); color: white; padding: 14px 24px; box-shadow: 0 3px 14px #0f172a33; }
-    .header-title { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
-    .header-subtitle { font-size: 11px; font-weight: 400; opacity: .8; margin-top: 3px; }
-    .header-badge { padding: 7px 12px; border: 1px solid #ffffff55; border-radius: 999px; font-size: 11px; white-space: nowrap; background: #ffffff18; }
-    #map { flex: 1; width: 100%; height: 100%; background: #dbeafe; }
-    .map-year-badge { position: absolute; z-index: 500; top: 12px; right: 12px; padding: 8px 12px; border: 1px solid #ffffffaa; border-radius: 999px; background: linear-gradient(135deg, #075985ee, #0284c7ee); color: white; box-shadow: 0 3px 10px #0f172a44; font-size: 11px; font-weight: 700; letter-spacing: .2px; backdrop-filter: blur(4px); }
-    .map-panel { position: absolute; z-index: 500; left: 10px; bottom: 10px; width: 180px; padding: 9px 10px; border: 1px solid #ffffff; border-radius: 10px; background: linear-gradient(145deg, #fffffffa, #f8fafcf5); box-shadow: 0 5px 14px #0f172a2b; backdrop-filter: blur(8px); }
-    .map-panel h2 { display: flex; align-items: center; gap: 5px; color: #0f172a; font-size: 10px; line-height: 1.25; margin-bottom: 5px; }
-    .map-panel h2::before { content: '📍'; font-size: 11px; }
-    .map-panel p { color: #64748b; font-size: 9px; line-height: 1.35; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; }
-    .legend { display: grid; gap: 5px; color: #334155; font-size: 9px; }
-    .legend-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-    .legend-dot { flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 0 1.5px #e0f2fe; }
-    .leaflet-control-zoom { border: 1px solid #cbd5e1 !important; box-shadow: 0 2px 8px #0f172a22 !important; }
-    .leaflet-control-zoom a { color: #0369a1 !important; border-bottom: 1px solid #e2e8f0 !important; }
-    .ats-card { min-width: 300px; text-align: center; }
+    body { display: flex; flex-direction: column; height: 100vh; background: #e0f2fe; overflow: hidden; }
+    header { background: #0284c7; color: white; padding: 5px 16px; font-weight: 700; border-bottom: 3px solid #38bdf8; }
+    .header-subtitle { display: block; padding-left: 0; font-size: 13px; }
+    .header-brand { display: inline-flex; align-items: center; gap: 10px; }
+    .header-logo { width: 48px; height: 48px; flex: 0 0 auto; }
+    .header-title { font-size: 15px; line-height: 1.2; }
+    @media (max-width: 480px) {
+      header { padding: 5px 10px; }
+      .header-brand { gap: 8px; }
+      .header-logo { width: 42px; height: 42px; }
+      .header-title { font-size: 12px; }
+      .header-subtitle { font-size: 11px; }
+    }
+    #map { flex: 1; width: 100%; height: 100%; }
+    .ats-card { min-width: 250px; text-align: center; }
     .ats-card h3 { font-size: 15px; color: #0369a1; margin-bottom: 4px; border-bottom: 2px dashed #bae6fd; padding-bottom: 4px; font-weight: bold; }
     .ats-total { font-size: 12px; color: #475569; margin-bottom: 8px; }
-    .ats-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 8px; }
-    .ats-column { border: 0; border-radius: 7px; padding: 7px 4px; font-size: 10px; line-height: 1.35; cursor: pointer; transition: transform .15s, box-shadow .15s; }
-    .ats-column:hover, .ats-column:focus { transform: translateY(-2px); box-shadow: 0 2px 7px #64748b88; outline: 2px solid #0284c7; }
-    .ats-column strong { display: block; font-size: 11px; margin-bottom: 3px; }
-    .ats-column span, .ats-column em { display: none; }
-    .ats-column.active span, .ats-column.active em { display: block; }
-    .ats-column em { font-style: normal; }
-    .ats-detail { min-height: 30px; margin-top: 8px; padding-top: 6px; border-top: 1px solid #cbd5e1; font-size: 11px; color: #334155; }
-    .column-bpb { background: #dcfce7; color: #166534; }
-    .column-do { background: #fee2e2; color: #991b1b; }
-    .column-ltm { background: #fef3c7; color: #92400e; }
+    .btn-group { display: flex; gap: 6px; margin-bottom: 8px; }
+    .ats-btn { flex: 1; padding: 8px 4px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; color: white; }
+    .btn-green { background: #16a34a; }
+    .btn-red { background: #dc2626; }
+    .btn-yellow { background: #eab308; color: #713f12; }
+    .data-display { background: #fffbeb; border: 1.5px solid #fde047; border-radius: 8px; padding: 8px; font-size: 12px; text-align: left; display: none; }
+    .data-display.active { display: block; }
+    .map-legend {
+      position: absolute;
+      z-index: 1000;
+      left: 14px;
+      bottom: 14px;
+      width: 150px;
+      padding: 7px 8px;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      background: rgba(248, 250, 252, 0.96);
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.16);
+      color: #475569;
+    }
+    .legend-heading {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+      color: #1e293b;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .legend-pin { font-size: 13px; }
+    .legend-description {
+      padding-bottom: 5px;
+      border-bottom: 1px solid #dbe4ee;
+      color: #64748b;
+      font-size: 9px;
+      line-height: 1.3;
+    }
+    .legend-items { display: grid; gap: 4px; padding-top: 5px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 9px; }
+    .legend-dot {
+      flex: 0 0 9px;
+      width: 9px;
+      height: 9px;
+      border: 1.5px solid white;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
+    }
+    @media (max-width: 480px) {
+      .map-legend { left: 10px; bottom: 10px; width: 150px; padding: 7px 8px; }
+      .legend-heading { font-size: 10px; }
+      .legend-description, .legend-item { font-size: 9px; }
+    }
   </style>
 </head>
 <body>
   <header>
-    <div>
-      <div class="header-title">🗺️ Dashboard Data Anak Tidak Sekolah 2026</div>
-      <div class="header-subtitle">BBPMP Jawa Timur</div>
+    <div class="header-brand">
+      <svg class="header-logo" role="img" aria-label="Buku terbuka dengan peta" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 27C39 18 23 18 8 22v54c16-4 30-3 42 7 12-10 26-11 42-7V22C77 18 61 18 50 27Z" fill="#fff" stroke="#164e63" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M50 27v56" fill="none" stroke="#164e63" stroke-width="3"/>
+        <path d="m15 32 9-3 7 3 8-3 6 4v26l-8-3-7 3-7-3-8 3Zm70 0-9-3-7 3-8-3-6 4v26l8-3 7 3 7-3 8 3Z" fill="#dff4ff" stroke="#a5d7e8" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="m18 50 8-7 7 4 8-8m-26 20 9-5 8 4 9-7M82 50l-8-7-7 4-8-8m26 20-9-5-8 4-9-7" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M34 43c0-5 4-9 9-9s9 4 9 9c0 7-9 16-9 16s-9-9-9-16Z" fill="#0284c7" stroke="#fff" stroke-width="2"/>
+        <circle cx="43" cy="43" r="3" fill="#fff"/>
+      </svg>
+      <div class="header-title">DASHBOARD ANAK TIDAK SEKOLAH (ATS)<span class="header-subtitle">BBPMP JAWA TIMUR</span></div>
     </div>
-    <div class="header-badge">38 Kabupaten/Kota · 2026</div>
   </header>
   <div id="map">
-    <div class="map-year-badge">DATA ATS · 2026</div>
-    <aside class="map-panel">
-      <h2>Persebaran ATS Jawa Timur</h2>
-      <p>Pilih titik wilayah untuk melihat rincian kategori ATS.</p>
-      <div class="legend">
-        <div class="legend-item"><span class="legend-dot" style="background:#0284c7"></span> Lokasi kabupaten/kota</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Belum Pernah Sekolah</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Putus Sekolah</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#d97706"></span> Lulus Tidak Melanjutkan</div>
+    <aside class="map-legend" aria-label="Legenda peta ATS">
+      <div class="legend-heading"><span class="legend-pin" aria-hidden="true">📍</span>Persebaran ATS Jawa Timur</div>
+      <p class="legend-description">Pilih titik wilayah untuk melihat rincian kategori ATS.</p>
+      <div class="legend-items">
+        <div class="legend-item"><span class="legend-dot" style="background:#0284c7"></span>Lokasi kabupaten/kota</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#16a34a"></span>Belum Pernah Sekolah</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#dc2626"></span>Putus Sekolah</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#d97706"></span>Lulus Tidak Melanjutkan</div>
       </div>
     </aside>
   </div>
@@ -104,10 +149,7 @@
     ];
 
     const map = L.map('map').setView([-7.7, 112.8], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     function createPopup(d) {
       const div = document.createElement('div');
@@ -115,42 +157,13 @@
       div.innerHTML = `
         <h3>${d.name}</h3>
         <div class="ats-total">Total ATS: <b>${d.total.toLocaleString('id-ID')} anak</b></div>
-        <div class="ats-columns">
-          <button type="button" class="ats-column column-bpb" data-type="bpb">
-            <strong>🟢 BPB</strong>
-            <span>${d.bpb.toLocaleString('id-ID')}</span>
-            <em>${d.bpbPct}</em>
-          </button>
-          <button type="button" class="ats-column column-do" data-type="do">
-            <strong>🔴 DO</strong>
-            <span>${d.doV.toLocaleString('id-ID')}</span>
-            <em>${d.doPct}</em>
-          </button>
-          <button type="button" class="ats-column column-ltm" data-type="ltm">
-            <strong>🟡 LTM</strong>
-            <span>${d.ltm.toLocaleString('id-ID')}</span>
-            <em>${d.ltmPct}</em>
-          </button>
+        <div class="btn-group">
+          <button class="ats-btn btn-green" onclick="show('${d.name}', 'bpb')">🟢 BPB</button>
+          <button class="ats-btn btn-red" onclick="show('${d.name}', 'do')">🔴 DO</button>
+          <button class="ats-btn btn-yellow" onclick="show('${d.name}', 'ltm')">🟡 LTM</button>
         </div>
-        <div class="ats-detail" aria-live="polite">Klik salah satu kolom untuk melihat detail.</div>
+        <div id="box-${d.name.replace(/[^a-zA-Z]/g, '')}" class="data-display"></div>
       `;
-
-      const detail = div.querySelector('.ats-detail');
-      div.querySelectorAll('.ats-column').forEach(button => {
-        button.addEventListener('click', () => {
-          div.querySelectorAll('.ats-column').forEach(item => item.classList.remove('active'));
-          button.classList.add('active');
-          const type = button.dataset.type;
-          const labels = {
-            bpb: ['🟢 Belum Pernah Sekolah (BPB)', d.bpb, d.bpbPct, '#16a34a'],
-            do: ['🔴 Putus Sekolah (DO)', d.doV, d.doPct, '#dc2626'],
-            ltm: ['🟡 Lulus Tidak Melanjutkan (LTM)', d.ltm, d.ltmPct, '#a16207']
-          };
-          const [label, value, percentage, color] = labels[type];
-          detail.innerHTML = `<b style="color:${color}">${label}:</b> ${value.toLocaleString('id-ID')} anak (${percentage})`;
-        });
-      });
-
       return div;
     }
 
